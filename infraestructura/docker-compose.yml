@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: remeco_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: remeco_db
+      MYSQL_USER: remeco_user
+      MYSQL_PASSWORD: remeco_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  clientes-personas:
+    build:
+      context: ../clientes-personas
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - default
+
+  cuentas-movimientos:
+    build:
+      context: ../cuentas-movimientos
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - default
+
+volumes:
+  mysql_data:
+
